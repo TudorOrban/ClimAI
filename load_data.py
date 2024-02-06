@@ -9,6 +9,7 @@ class DataLoader:
         self.window_size = window_size
         self.test_size = test_size
         self.drop_columns = drop_columns
+        self.scaler = MinMaxScaler() 
 
     def load_data(self):
         # Load the dataset
@@ -19,8 +20,7 @@ class DataLoader:
             data = data.drop(columns=self.drop_columns)
 
         # Normalize the data
-        scaler = MinMaxScaler()
-        data_normalized = scaler.fit_transform(data)
+        data_normalized = self.scaler.fit_transform(data)
 
         # Create sequences
         X, y = self.create_sequences(data_normalized)
