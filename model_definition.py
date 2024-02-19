@@ -11,9 +11,9 @@ from config import model_config
 class ClimateModel:
     def __init__(self, input_shape, output_dim):
         self.model = Sequential([
-            LSTM(model_config['lstm_units'][0], activation='relu', return_sequences=True, input_shape=input_shape, kernel_regularizer=l2(model_config['l2_regularization'][0])),
+            LSTM(model_config['lstm_units'][0], activation='tanh', return_sequences=True, input_shape=input_shape, kernel_regularizer=l2(model_config['l2_regularization'][0])),
             Dropout(model_config['dropout_rates'][0]),
-            LSTM(model_config['lstm_units'][1], activation='relu', kernel_regularizer=l2(model_config['l2_regularization'][1])),
+            LSTM(model_config['lstm_units'][1], activation='tanh', kernel_regularizer=l2(model_config['l2_regularization'][1])),
             Dropout(model_config['dropout_rates'][1]),
             Dense(output_dim)
         ])
@@ -56,3 +56,25 @@ class ClimateModel:
         # Store predictions and actuals for plotting or evaluation
         self.predictions = np.concatenate((train_predictions, test_predictions), axis=0)
         self.actuals = np.concatenate((y_train_actual, y_test_actual), axis=0)
+
+    def predict_future(self, last_window, window_size, scaler, future_steps=30):
+        predictions_future = []
+        last_window_sequence = last_window.reshape(1, window_size, -1)
+
+        for i in range(future_steps):
+            # Make prediction using the last window sequence
+            prediction = self.model.predict(last_window_sequence)[0]
+            print(f'Prediction before scaling at step {i}: {prediction}') 
+        
+            # Invert the scale of the prediction before using it further
+            prediction_inverted = scaler.inverse_transform(prediction.reshape(1, -1))[0]
+            print(f'Prediction after scaling at step {i}: {prediction_inverted}')
+        
+            predictions_future.append(prediction_inverted)
+
+            # Update the last window sequence with the new prediction
+            last_window_sequence = np.append(last_window_sequence[:, 1:, :], prediction.reshape(1, 1, -1), axis=1)
+            print(f'Updated last_window_sequence at step {i}: {last_window_sequence}')
+
+        return np.array(predictions_future)
+

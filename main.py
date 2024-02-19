@@ -1,5 +1,6 @@
 from load_data import DataLoader
 from model_definition import ClimateModel
+from plotter import Plotter
 
 # Configuration
 filepath = 'ZonAnn.Ts+dSST.csv'
@@ -18,3 +19,23 @@ history = model.fit(X_train, y_train, X_test, y_test, scaler)
 
 # Log history
 print(history.history)
+
+# Plot actual vs predicted and loss
+plotter = Plotter()
+plotter.plot_actual_vs_predicted(model.actuals, model.predictions, data_loader.column_names)
+plotter.plot_loss(history)
+
+# Generate future predictions
+last_window = X_test[-1]
+future_steps = 30
+predictions_future = model.predict_future(last_window, window_size=window_size, scaler=data_loader.scaler, future_steps=future_steps)
+
+# Plot future predictions
+plotter.plot_all_predictions(
+    model.actuals,
+    model.predictions,
+    predictions_future,
+    data_loader.column_names,
+    start_year=1880,
+    last_year=2017
+)

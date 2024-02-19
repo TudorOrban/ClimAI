@@ -15,6 +15,9 @@ class DataLoader:
         # Load the dataset
         data = pd.read_csv(self.filepath)
 
+        # Store column names for later use, excluding dropped columns
+        self.column_names = [col for col in data.columns if col not in self.drop_columns]
+
         # Drop the columns
         if self.drop_columns:
             data = data.drop(columns=self.drop_columns)
